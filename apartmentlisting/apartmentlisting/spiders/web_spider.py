@@ -1,3 +1,5 @@
+import logging
+from os import link
 import scrapy
 
 class WebSpider(scrapy.Spider):
@@ -12,8 +14,11 @@ class WebSpider(scrapy.Spider):
         #in the listing page
         for listings in response.css('li.ef447dde') :
 
-            yield {
-                
-                'item_page' : listings.css('a._287661cb::attr(href)').get()
+            yield  scrapy.Request(response.urljoin(listings.css('a._287661cb::attr(href)').get()),callback= self.crawl_listing)
 
-            }  
+    #this function will get all relative links of listed appartment
+    #  
+    def crawl_listing(self,response):
+        
+        self.logger.info("Got into products links :",response.url)
+        
