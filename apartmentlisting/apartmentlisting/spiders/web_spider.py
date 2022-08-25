@@ -17,6 +17,11 @@ class WebSpider(scrapy.Spider):
             #callbacks craw_listing function with response as param
             yield  scrapy.Request(response.urljoin(listings.css('a._287661cb::attr(href)').get()),callback= self.crawl_listing)
 
+        #switches to next page of listings
+        next_page = response.css('a.b7880daf').attrib['href']
+        if next_page is not None:
+            yield response.follow(next_page, callback=self.parse)
+
     #scraps data from listed appartment
     # yields as a dictonary
     def crawl_listing(self,response):
@@ -45,9 +50,9 @@ class WebSpider(scrapy.Spider):
                     response.css('picture._219b7e0a > source::attr(srcset)').get(),
                     "breadcrumbs" : ">".join(list(map(str,response.css('div._74ac503e > a > span::text').getall()))),
                     "amenities" : response.css('div._40544a2f >span._005a682a::text').getall(),
-                    "description" : ''.join(response.css('span._2a806e1e::text').getall())
-,
+                    "description" : ''.join(response.css('span._2a806e1e::text').getall()),
                 }
+
         except :
             print("error")
         
