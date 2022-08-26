@@ -9,11 +9,11 @@ class WebSpider(scrapy.Spider):
 
     def parse(self,response):
 
-        #scraps the links to listed appartments
+        #scraps the links to listed apartments
         #in the listing page
         for listings in response.css('li.ef447dde') :
 
-        #     #gets all the relative links of listed appartments
+        #     #gets all the relative links of listed apartments
         #     #callbacks craw_listing function with response as param
              yield  scrapy.Request(response.urljoin(listings.css('a._287661cb::attr(href)').get()),callback= self.crawl_listing)
 
@@ -27,7 +27,7 @@ class WebSpider(scrapy.Spider):
 
 
 
-    #scraps data from listed appartment
+    #scraps data from listed apartment
     # yields as a dictonary
     def crawl_listing(self,response):
 
