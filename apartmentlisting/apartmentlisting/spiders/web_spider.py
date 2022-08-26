@@ -3,7 +3,7 @@ import scrapy
 
 class WebSpider(scrapy.Spider):
 
-    name = 'WebSpider'
+    name = 'bayut'
     #crawling starts from here
     start_urls = [ 'https://www.bayut.com/to-rent/property/dubai/' ]
 
@@ -13,27 +13,35 @@ class WebSpider(scrapy.Spider):
         #in the listing page
         for listings in response.css('li.ef447dde') :
 
-            #gets all the relative links of listed appartments
-            #callbacks craw_listing function with response as param
-            yield  scrapy.Request(response.urljoin(listings.css('a._287661cb::attr(href)').get()),callback= self.crawl_listing)
+        #     #gets all the relative links of listed appartments
+        #     #callbacks craw_listing function with response as param
+             yield  scrapy.Request(response.urljoin(listings.css('a._287661cb::attr(href)').get()),callback= self.crawl_listing)
+
+        #finds link to next page
+        next_page = response.css('a.b7880daf[title=Next]::attr(href)').get()
 
         #switches to next page of listings
-        next_page = response.css('a.b7880daf').attrib['href']
-        if next_page is not None:
-            yield response.follow(next_page, callback=self.parse)
+        if next_page:
+            next_page = response.urljoin(next_page)
+            yield scrapy.Request(url=next_page, callback=self.parse)
+
+
 
     #scraps data from listed appartment
     # yields as a dictonary
     def crawl_listing(self,response):
-        
-        try:
 
-            yield{
-                    "property_id" : response.css('span._812aa185::text')[2].get(),
-                    "purpose" : response.css('span._812aa185::text')[1].get(),
-                        "type" : response.css('span._812aa185::text')[0].get(),
-                    "added_on" : response.css('span._812aa185::text')[5].get(),
-                    "furnishing" : response.css('span._812aa185::text')[3].get(),
+
+        new_dict = dict(zip(response.css('span._3af7fa95::text').getall(),response.css('span._812aa185::text').getall()))
+
+        try:
+            yield {
+                
+                    "property_id" :new_dict['Reference no.'],
+                    "purpose" :  new_dict['Purpose'],
+                    "type" : new_dict['Type'],
+                    "added_on" :new_dict['Added on'],
+                    "furnishing" : new_dict['Furnishing'],
                     "price" : {
                             "currency" : response.css('div.c4fc20ba > span::text')[0].get(),
                             "amount" : response.css('div.c4fc20ba > span::text')[1].get(),
@@ -52,7 +60,6 @@ class WebSpider(scrapy.Spider):
                     "amenities" : response.css('div._40544a2f >span._005a682a::text').getall(),
                     "description" : ''.join(response.css('span._2a806e1e::text').getall()),
                 }
+        except KeyError as e:
 
-        except :
-            print("error")
-        
+                print("Missing key :",e)
